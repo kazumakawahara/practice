@@ -17,4 +17,4 @@ jobs:
         with:
           rules: |            
             main <- develop [release]
-            develop <- project/* [release]
+            develop <- project/* [ignore]
