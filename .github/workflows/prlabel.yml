@@ -6,7 +6,7 @@ on:
       - develop
 
 jobs:
-  restrict-pr-label:
+  pr-label:
     runs-on: ubuntu-latest
     permissions:
       pull-requests: write
