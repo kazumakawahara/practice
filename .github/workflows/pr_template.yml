@@ -1,0 +1,25 @@
+name: Apply PR Template
+
+on:
+  pull_request:
+    types: [opened, edited]
+
+jobs:
+  apply-template:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v2
+
+      - name: Extract ticket number from branch name
+        id: extract_ticket
+        run: |
+          # Extract the ticket number from the branch name
+          TICKET_NUMBER=$(echo "${GITHUB_REF##*/}" | grep -oP '(?<=feature/)[A-Z]+-\d+')
+          echo "TICKET_NUMBER=$TICKET_NUMBER" >> $GITHUB_ENV
+
+      - name: Replace placeholders in template and apply it
+        if: endsWith(github.head_ref, 'uc')
+        run: |
+          PR_DESCRIPTION=$(cat .github/pullrequesttemplate/uc_branch_template.md | sed "s/{{TICKET_NUMBER}}/${{ env.TICKET_NUMBER }}/g")
+          gh pr edit ${{ github.event.pull_request.number }} --body "$PR_DESCRIPTION"
