@@ -15,11 +15,18 @@ jobs:
         id: extract_ticket
         run: |
           # Extract the ticket number from the branch name
-          TICKET_NUMBER=$(echo "${GITHUB_REF##*/}" | grep -oP '(?<=feature/)[A-Z]+-\d+')
+          TICKET_NUMBER=$(echo "${GITHUB_REF##*/}" | sed -E 's/.*([A-Z]+-[0-9]+).*/\1/')
+          
+          # If no ticket number is found, set a default or handle error
+          if [ -z "$TICKET_NUMBER" ]; then
+            echo "No ticket number found in the branch name. Skipping this step."
+            TICKET_NUMBER="N/A"  # Set to a default value or exit with an error
+          fi
+
           echo "TICKET_NUMBER=$TICKET_NUMBER" >> $GITHUB_ENV
 
       - name: Replace placeholders in template and apply it
         if: endsWith(github.head_ref, 'uc')
         run: |
-          PR_DESCRIPTION=$(cat .github/pullrequesttemplate/uc_branch_template.md | sed "s/{{TICKET_NUMBER}}/${{ env.TICKET_NUMBER }}/g")
+          PR_DESCRIPTION=$(cat .github/PULL_REQUEST_TEMPLATE/uc_branch_template.md | sed "s/{{TICKET_NUMBER}}/${{ env.TICKET_NUMBER }}/g")
           gh pr edit ${{ github.event.pull_request.number }} --body "$PR_DESCRIPTION"
