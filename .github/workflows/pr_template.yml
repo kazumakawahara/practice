@@ -25,8 +25,12 @@ jobs:
 
           echo "TICKET_NUMBER=$TICKET_NUMBER" >> $GITHUB_ENV
 
-      - name: Replace placeholders in template and apply it
-        if: endsWith(github.head_ref, 'uc')
+      - name: Add comment to PR with template content
         run: |
           PR_DESCRIPTION=$(cat .github/PULL_REQUEST_TEMPLATE/uc_branch_template.md | sed "s/{{TICKET_NUMBER}}/${{ env.TICKET_NUMBER }}/g")
-          gh pr edit ${{ github.event.pull_request.number }} --body "$PR_DESCRIPTION"
+          echo "Template Content:"
+          echo "$PR_DESCRIPTION"
+          curl -s -X POST -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+          -H "Content-Type: application/json" \
+          -d "{\"body\": \"$PR_DESCRIPTION\"}" \
+          "${{ github.event.pull_request._links.comments.href }}"
